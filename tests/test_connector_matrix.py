@@ -141,14 +141,10 @@ class TestConnectorMatrixAsync(asynctest.TestCase):
             assert self.connector.connection.sync_token == 'arbitrary string2'
 
     async def test_listen(self):
-        # Set up sync response
-        # set up filter_id and room_ids
         self.connector.room_ids = {'main': '!aroomid:localhost'}
         self.connector.filter_id = 'arbitrary string'
 
-        with amock.patch(api_string.format('sync')) as patched_sync, \
-             amock.patch(api_string.format('get_display_name')) as patched_name, \
-             mock.patch('opsdroid.core.OpsDroid.parse') as patched_parse:
+        with amock.patch(api_string.format('get_display_name')) as patched_name:
             patched_name.return_value = asyncio.Future()
             patched_name.return_value.set_result('SomeUsersName')
 
