@@ -97,6 +97,7 @@ class TestConnectorMatrixAsync(asynctest.TestCase):
     def setUp(self):
         self.connector = setup_connector()
         self.api = AsyncHTTPAPI('https://notaurl.com', None)
+        self.connector.connection = self.api
 
     async def test_make_filter(self):
         with amock.patch(api_string.format('create_filter')) as patched_filter:
@@ -142,38 +143,22 @@ class TestConnectorMatrixAsync(asynctest.TestCase):
     async def test_listen(self):
         # Set up sync response
         # set up filter_id and room_ids
-        self.connector.room_ids = {'main': '!aroomid1:localhost'}
+        self.connector.room_ids = {'main': '!aroomid:localhost'}
         self.connector.filter_id = 'arbitrary string'
 
         with amock.patch(api_string.format('sync')) as patched_sync, \
              amock.patch(api_string.format('get_display_name')) as patched_name, \
              mock.patch('opsdroid.core.OpsDroid.parse') as patched_parse:
             patched_name.return_value = asyncio.Future()
-            patched_name.return_value.set_result({'displayname': 'SomeUsersName'})
+            patched_name.return_value.set_result('SomeUsersName')
 
-            patched_sync.return_value = asyncio.Future()
-            # patched_sync.return_value.set_result(self.sync_return)
-
-            count = 0
-            def side_effect(*args, **kwargs):
-                global count
-                print(count)
-                if count:
-                    raise ValueError()
-                else:
-                    count += 1
-                    return self.sync_return
-
-            patched_sync.side_effect = side_effect
-            await self.connector.listen(OpsDroid())
-
-            returned_message = patched_parse.call_args[0]
+            returned_message = await self.connector._parse_sync_response(self.sync_return)
 
             assert returned_message.text == 'LOUD NOISES'
             assert returned_message.user == 'SomeUsersName'
             assert returned_message.room == '!aroomid:localhost'
             assert returned_message.connector == self.connector
-            raw_message = self.sync_return['rooms']['join']['timeline']['events'][0]
+            raw_message = self.sync_return['rooms']['join']['!aroomid:localhost']['timeline']['events'][0]
             assert returned_message.raw_message == raw_message
 
     async def test_get_nick(self):
