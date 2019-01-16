@@ -158,13 +158,17 @@ class TestConnectorMatrixAsync(asynctest.TestCase):
             assert returned_message.raw_message == raw_message
 
     async def test_get_nick(self):
-        pass
+        self.connector.room_specific_nicks = True
+
+        with amock.patch(api_string.format('get_room_displayname')) as patched_name:
+            patched_name.return_value = asyncio.Future()
+            patched_name.return_value.set_result('')
 
     async def test_get_html_content(self):
         pass
 
     # async def test_respond(self):
-    #     message = Message()
+    #     message = await self.connector._parse_sync_response(self.sync_return)
 
     #     self.connector.respond(message)
 
