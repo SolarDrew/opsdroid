@@ -34,11 +34,12 @@ class ConnectorCalDav(Connector):
         """Listen for new messages from the chat service."""
         while True:  # pylint: disable=R1702
             try:
-                response = "some way of getting a reponse"
+                # Poll the service for new events
+                # Parse those events through the event creator to convert it to an opsdroid event
+                await self.opsdroid.parse(event) # send the opsdroid event out to be handled by skills
             except:
                 _LOGGER.exception(_("An error happened."))
 
     @register_event(events.Message)
     async def _send_message(self, message):
         """Do something when the connector gets a Message event from opsdroid."""
-
